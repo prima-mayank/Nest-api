@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
+import { UsersModule } from './users/users.module';
 
 config({ path: join(__dirname, '..', '.env'), quiet: true });
 
@@ -21,6 +22,7 @@ if (!dbUrl) {
       autoLoadEntities: true,
       synchronize: true,
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
