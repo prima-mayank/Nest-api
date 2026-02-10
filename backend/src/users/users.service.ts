@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
-import { UserSignup } from './dto/user-signup.dto';
+import { UserSignupDto } from './dto/user-signup.dto';
+import * as bcrypt from 'bcrypt';
+import { UserSigninDto } from './dto/user-signin.dto';
+import { sign } from 'jsonwebtoken';
 
 @Injectable()
 export class UsersService {
@@ -16,34 +17,60 @@ export class UsersService {
     private userRepository: Repository<UserEntity>,
   ) {}
 
-  async signup(userSignup: UserSignup): Promise<UserEntity> {
-    const { name, email, password } = userSignup;
+  async signup(userSignupDto: UserSignupDto): Promise<UserEntity> {
+    const { name, email, password } = userSignupDto;
 
     if (!name || !email || !password) {
       throw new BadRequestException('name, email and password are required');
     }
 
-    const user = this.userRepository.create({ name, email, password });
-    return await this.userRepository.save(user);
+    if(await this.findUserByEmail(email)) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    let user = this.userRepository.create({ name, email, password: hashedPassword });
+     await this.userRepository.save(user);
+  
+
+    const { password: _, ...result } = user;
+    return result as UserEntity;
   }
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async findUserByEmail(email: string): Promise<UserEntity | null> {
+    return await this.userRepository.findOneBy({ email });
   }
 
-  findAll() {
-    return `This action returns all users`;
+
+  async signin(userSigninDto: UserSigninDto):Promise<{user: UserEntity, token: string}>{
+    const {email, password} = userSigninDto;
+
+    if(!email || !password) {
+      throw new BadRequestException('Email and password are required');
+    }
+
+    const user = await this.userRepository.findOne({ where: { email }, select: ['id', 'name', 'email', 'password'] });
+
+    if(!user) {
+      throw new BadRequestException('Invalid email or password');
+    }
+
+    if(!await bcrypt.compare(password, user.password)) {
+      throw new BadRequestException('Invalid email or password');
+    }
+
+    const token = await this.accessToken(user);
+
+    const { password: _, ...result } = user;
+    return { ...result, token } as any;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async accessToken(user: UserEntity): Promise<string> {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    return sign({ id: user.id, email: user.email }, jwtSecret, { expiresIn: '1h' });
   }
 }
