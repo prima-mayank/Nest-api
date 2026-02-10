@@ -73,4 +73,9 @@ export class UsersService {
     }
     return sign({ id: user.id, email: user.email }, jwtSecret, { expiresIn: '1h' });
   }
+
+  async findOne(id: number): Promise<UserEntity | null> {
+    const user = await this.userRepository.findOneBy({ id });
+    return user;
+  }
 }
