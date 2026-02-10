@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
 import { UsersModule } from './users/users.module';
+import { UsersController } from './users/users.controller';
+import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
 
 config({ path: join(__dirname, '..', '.env'), quiet: true });
 
@@ -27,4 +29,10 @@ if (!dbUrl) {
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CurrentUserMiddleware)
+      .forRoutes({ path: 'users', method: RequestMethod.ALL }, UsersController);
+  }
+}
