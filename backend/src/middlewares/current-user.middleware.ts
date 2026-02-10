@@ -22,13 +22,14 @@ export class CurrentUserMiddleware implements NestMiddleware {
     }
 
     try {
-      const payload =<JwtPayload> verify(token, jwtSecret);
-      const {id,...rest} = payload
+      const payload = <JwtPayload>verify(token, jwtSecret);
+      const { id } = payload;
 
-
-      const currentuser =await this.userService.findOne(+id)
-    } catch (err) {
-      console.error('Error verifying JWT token:', err);
+      const currentUser = await this.userService.findOne(+id);
+      req['currentUser'] = currentUser;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('JWT verification error:', errorMessage);
     }
 
     next();
