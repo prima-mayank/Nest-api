@@ -7,6 +7,7 @@ import { join } from 'path';
 import { UsersModule } from './users/users.module';
 import { UsersController } from './users/users.controller';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
+import { CatagoriesModule } from './catagories/catagories.module';
 
 config({ path: join(__dirname, '..', '.env'), quiet: true });
 
@@ -25,6 +26,7 @@ if (!dbUrl) {
       synchronize: true,
     }),
     UsersModule,
+    CatagoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
