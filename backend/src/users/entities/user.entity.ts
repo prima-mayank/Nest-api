@@ -8,6 +8,7 @@ import {
 } from "typeorm";
 import { Roles } from "../../utility/common/user-roles.enum";
 import { CategoryEntity } from "src/catagories/entities/catagory.entity";
+import { ProductEntity } from "src/products/entities/product.entity";
 
 @Entity("users")
 export class UserEntity {
@@ -34,4 +35,7 @@ export class UserEntity {
 
   @OneToMany(() => CategoryEntity, (cat) => cat.addedBy)
   categories: CategoryEntity[];
+
+  @OneToMany(() => ProductEntity, (prod) => prod.addedBy)
+  products: ProductEntity[];
 }

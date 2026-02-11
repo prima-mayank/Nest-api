@@ -1,3 +1,4 @@
+import { ProductEntity } from "src/products/entities/product.entity";
 import { UserEntity } from "src/users/entities/user.entity"; // specific path may vary based on your folder structure
 import { 
   Column, 
@@ -6,7 +7,8 @@ import {
   ManyToOne, 
   PrimaryGeneratedColumn, 
   UpdateDateColumn, 
-  Timestamp 
+  Timestamp, 
+  OneToMany
 } from "typeorm";
 
 @Entity({ name: 'categories' })
@@ -26,8 +28,10 @@ export class CategoryEntity {
   @UpdateDateColumn()
   updatedAt: Timestamp;
 
-  
 
   @ManyToOne(() => UserEntity, (user) => user.categories)
   addedBy: UserEntity;
+
+  @OneToMany(() => ProductEntity, (prod) => prod.category)
+  products: ProductEntity[];
 }

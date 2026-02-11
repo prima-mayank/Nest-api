@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCatagoryDto } from './dto/create-catagory.dto';
-import { UpdateCatagoryDto } from './dto/update-catagory.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateCategoryDto } from './dto/create-catagory.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryEntity } from './entities/catagory.entity';
 import { Repository } from 'typeorm';
+import { UserEntity } from 'src/users/entities/user.entity';
+import { UpdateCatagoryDto } from './dto/update-catagory.dto';
 
 @Injectable()
 export class CatagoriesService {
@@ -13,23 +14,35 @@ export class CatagoriesService {
       private categoryRepository: Repository<CategoryEntity>,
     ) {}
   
-  create(createCatagoryDto: CreateCatagoryDto) {
-    return 'This action adds a new catagory';
+  async create(createCatagoryDto: CreateCategoryDto,currentUser:UserEntity) : Promise<CategoryEntity>{
+    const catagory= this.categoryRepository.create(createCatagoryDto)
+    catagory.addedBy=currentUser
+    return this.categoryRepository.save(catagory);
   }
 
-  findAll() {
-    return `This action returns all catagories`;
+  async findOne(id: number): Promise<CategoryEntity | null> {
+    const catagory = await this.categoryRepository.findOne({
+      where : { id },
+      relations: { addedBy: true },
+      select : {
+        addedBy: {
+          id: true,
+          name: true,
+          email: true
+        }
+      }
+    })
+    return catagory;
+  }
+  async findAll(): Promise<CategoryEntity[] | null> {
+    const catagory = await this.categoryRepository.find();
+    return catagory;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} catagory`;
+  async update(id: number, updateCatagoryDto: UpdateCatagoryDto): Promise<any> {
+    const catagory = await this.categoryRepository.findOneBy({ id });
+    if(!catagory) throw new NotFoundException('Catagory not found');
+    Object.assign(catagory, updateCatagoryDto);
+    return await this.categoryRepository.save(catagory);  }
   }
-
-  update(id: number, updateCatagoryDto: UpdateCatagoryDto) {
-    return `This action updates a #${id} catagory`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} catagory`;
-  }
-}
+  
