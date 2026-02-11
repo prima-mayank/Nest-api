@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { UsersController } from './users/users.controller';
 import { CurrentUserMiddleware } from './middlewares/current-user.middleware';
 import { CatagoriesModule } from './catagories/catagories.module';
+import { ProductsModule } from './products/products.module';
 
 config({ path: join(__dirname, '..', '.env'), quiet: true });
 
@@ -27,6 +28,7 @@ if (!dbUrl) {
     }),
     UsersModule,
     CatagoriesModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
